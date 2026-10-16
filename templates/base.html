@@ -26,14 +26,16 @@
       {% endfor %}
     </nav>
     <div class="zijbalk__ik">
-      <div class="portret" aria-hidden="true">{{ ((current_user.name or current_user.email).split()|map('first')|join)[:2]|upper }}</div>
-      <div class="wie">
-        <span>{{ current_user.name or current_user.email }}</span>
-        <span><a href="{{ url_for('beheer.account') }}">Account</a></span>
-      </div>
+      <a class="profiel" href="{{ url_for('beheer.account') }}" {% if ep == 'beheer.account' %}aria-current="page"{% endif %} title="Je account">
+        <span class="portret" aria-hidden="true">{{ ((current_user.name or current_user.email).split()|map('first')|join)[:2]|upper }}</span>
+        <span class="profiel__tekst">
+          <span class="profiel__naam">{{ current_user.name or current_user.email }}</span>
+          <span class="profiel__mail">{{ current_user.email }}</span>
+        </span>
+      </a>
       <form method="post" action="{{ url_for('auth.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="knop knop--plat" type="submit">Uitloggen</button>
+        <button class="knop knop--plat knop--icoon" type="submit" title="Uitloggen" aria-label="Uitloggen">{{ symbool('uitloggen') }}</button>
       </form>
     </div>
   </aside>

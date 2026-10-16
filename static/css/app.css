@@ -84,18 +84,24 @@ img.logo--donker { display: none; }
 }
 .zijbalk__lijst { display: grid; gap: 1px; }
 .zijbalk__kop { font-size: 11px; font-weight: 600; color: var(--label-3); padding: 10px 10px 4px; }
-.zijbalk a {
+.zijbalk__lijst a {
   display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px;
   border-radius: 6px; color: var(--label); font-size: 13px;
 }
-.zijbalk a:hover { text-decoration: none; background: var(--vulling); }
-.zijbalk a svg { width: 16px; height: 16px; color: var(--accent); flex: none; }
-.zijbalk a[aria-current="page"] { background: var(--accent); color: var(--op-accent); }
-.zijbalk a[aria-current="page"] svg { color: var(--op-accent); }
-.zijbalk__ik { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 8px; border-top: 1px solid var(--scheiding); }
-.zijbalk__ik .wie { flex: 1; min-width: 0; line-height: 1.25; }
-.zijbalk__ik .wie span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.zijbalk__ik .wie span + span { color: var(--label-2); font-size: 11px; }
+.zijbalk__lijst a:hover { text-decoration: none; background: var(--vulling); }
+.zijbalk__lijst a svg { width: 16px; height: 16px; color: var(--accent); flex: none; }
+.zijbalk__lijst a[aria-current="page"] { background: var(--accent); color: var(--op-accent); }
+.zijbalk__lijst a[aria-current="page"] svg { color: var(--op-accent); }
+.zijbalk__ik { margin-top: auto; display: flex; align-items: center; gap: 4px; padding-top: 10px; border-top: 1px solid var(--scheiding); }
+.zijbalk__ik form { margin: 0; flex: none; }
+.profiel { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: 8px; color: var(--label); }
+.profiel:hover { text-decoration: none; background: var(--vulling); }
+.profiel[aria-current="page"] { background: var(--vulling-2); }
+.profiel__tekst { display: grid; min-width: 0; line-height: 1.25; text-align: left; }
+.profiel__naam { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profiel__mail { font-size: 11px; color: var(--label-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zijbalk__ik .knop--icoon { color: var(--label-2); }
+.zijbalk__ik .knop--icoon:hover { color: var(--label); }
 
 .inhoud { min-width: 0; }
 .werkbalk {
