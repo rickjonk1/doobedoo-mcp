@@ -100,7 +100,7 @@ jobs:
             "cloud-init status --wait >/dev/null 2>&1 || true",
             "echo \($s) | base64 -d > /usr/local/bin/doobedoo-deploy && chmod 750 /usr/local/bin/doobedoo-deploy",
             "echo \($c) | base64 -d > /etc/doobedoo/Caddyfile",
-            "/usr/local/bin/doobedoo-deploy \($t)"
+            "CADDY_HERSTART=1 /usr/local/bin/doobedoo-deploy \($t)"
           ]')
           id=$(aws ssm send-command --instance-ids "${{ steps.stack.outputs.server }}" \
                  --document-name AWS-RunShellScript --comment "deploy ${{ github.sha }}" \
