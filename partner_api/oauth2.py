@@ -113,8 +113,8 @@ def _oauth_error(code, desc, status=400):
 
 
 _SCOPE_LABELS = {
-    "odoo:read":  ("Odoo lezen", "Records zoeken en opvragen in de gekoppelde databases."),
-    "odoo:write": ("Odoo wijzigen", "Records aanmaken, wijzigen en verwijderen."),
+    "odoo:read":  ("Gegevens lezen", "Zoeken en opvragen in de gekoppelde databases."),
+    "odoo:write": ("Gegevens wijzigen", "Records aanmaken, wijzigen en verwijderen."),
     "odoo:admin": ("Odoo admin", "Willekeurige model-methodes aanroepen (execute_method)."),
 }
 

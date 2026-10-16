@@ -48,7 +48,7 @@ def _login(c):
                                "password": "een-lang-wachtwoord"})
     assert r.status_code == 302 and "/2fa/instellen" in r.location
     r = c.get("/2fa/instellen")
-    geheim = re.search(r'class="geheim"[^>]*>([A-Z2-7]+)<', r.text).group(1)
+    geheim = re.search(r'Handmatig: ([A-Z2-7]+)<', r.text).group(1)
     r = c.post("/2fa/instellen", data={"csrf_token": _csrf(r.text),
                                        "code": pyotp.TOTP(geheim).now()})
     assert r.status_code == 302
@@ -61,7 +61,7 @@ def test_inloggen_en_beveiligingsheaders(app):
     assert c.get("/").status_code == 302                     # niet ingelogd
     _login(c)
     r = c.get("/")
-    assert r.status_code == 200 and "Koppelen met Claude" in r.text
+    assert r.status_code == 200 and "Claude koppelen" in r.text
     assert "default-src 'self'" in r.headers["Content-Security-Policy"]
     assert r.headers["X-Frame-Options"] == "DENY"
     for pad in ("/databases", "/koppelingen", "/gebruikers", "/logboek", "/account"):
@@ -95,7 +95,7 @@ def test_uitnodiging_en_wachtwoord(app):
     pad = link.split("mcp.doobedoo.nl")[1]
     c2 = app.test_client()
     r = c2.get(pad)
-    assert "Welkom, Eva" in r.text
+    assert "Kies een wachtwoord" in r.text
     r = c2.post(pad, data={"csrf_token": _csrf(r.text), "nieuw": "kort", "herhaal": "kort"})
     assert "minstens 12" in r.text
     r = c2.post(pad, data={"csrf_token": _csrf(c2.get(pad).text),
@@ -121,7 +121,7 @@ def test_oauth_pkce_en_mcp(app):
     assert r.status_code == 302 and "/login" in r.location
     _login(c)
     r = c.get(q)
-    assert "Koppeling goedkeuren" in r.text and "Claude" in r.text
+    assert "Claude toegang geven?" in r.text
     params = re.search(r'name="oauth_params" value="([^"]+)"', r.text).group(1)
     r = c.post("/oauth2/authorize", data={"csrf_token": _csrf(r.text), "oauth_params": params,
                                           "decision": "allow"})

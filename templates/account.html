@@ -1,35 +1,18 @@
 {% extends "base.html" %}
 {% block titel %}Account{% endblock %}
 {% block inhoud %}
-<div class="kop">
-  <div>
-    <h1>Account</h1>
-    <p>{{ current_user.name }} · {{ current_user.email }}</p>
-  </div>
-</div>
-
 <section class="sectie">
-  <h2>Beveiliging</h2>
   <div class="groep">
-    <div class="rij">
-      <div class="rij__tekst">
-        <div class="rij__titel">Tweestapsverificatie</div>
-        <div class="rij__sub">Bij elke login vragen we een code uit je authenticator-app.</div>
-      </div>
-      <div class="rij__rechts"><span class="pil pil--ok">Aan</span></div>
-    </div>
-    <div class="rij">
-      <div class="rij__tekst">
-        <div class="rij__titel">Rol</div>
-        <div class="rij__sub">{{ 'Beheerder: databases, gebruikers en koppelingen beheren.' if current_user.is_admin() else 'Gebruiker: Claude koppelen en gebruiken.' }}</div>
-      </div>
-    </div>
+    <div class="rij"><div class="rij__label">Naam</div><div class="rij__waarde">{{ current_user.name }}</div></div>
+    <div class="rij"><div class="rij__label">E-mailadres</div><div class="rij__waarde">{{ current_user.email }}</div></div>
+    <div class="rij"><div class="rij__label">Rol</div><div class="rij__waarde">{{ 'Beheerder' if current_user.is_admin() else 'Gebruiker' }}</div></div>
+    <div class="rij"><div class="rij__label">Tweestapsverificatie</div><div class="rij__waarde"><span class="status status--ok">Aan</span></div></div>
   </div>
   <p class="voet">Nieuwe telefoon? Vraag een beheerder je tweestapsverificatie te resetten.</p>
 </section>
 
 <section class="sectie">
-  <h2>Wachtwoord wijzigen</h2>
+  <h2>Wachtwoord</h2>
   <form class="groep sheet__inhoud" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="email" name="email" value="{{ current_user.email }}" autocomplete="username" hidden>
@@ -43,11 +26,11 @@
         <input id="nieuw" name="nieuw" type="password" autocomplete="new-password" minlength="12" required>
       </div>
       <div class="veld">
-        <label for="herhaal">Herhaal</label>
+        <label for="herhaal">Herhaal nieuw wachtwoord</label>
         <input id="herhaal" name="herhaal" type="password" autocomplete="new-password" minlength="12" required>
       </div>
     </div>
-    <div class="acties"><button class="knop" type="submit">Wachtwoord wijzigen</button></div>
+    <div class="knoppen"><button class="knop knop--primair" type="submit">Wijzig wachtwoord</button></div>
   </form>
 </section>
 {% endblock %}
