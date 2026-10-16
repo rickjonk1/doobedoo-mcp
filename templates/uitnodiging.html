@@ -1,22 +1,15 @@
 {% extends "base.html" %}
 {% block titel %}Uitnodiging{% endblock %}
 {% block inhoud %}
-<div class="kop">
-  <div>
-    <h1>Uitnodiging voor {{ gebruiker.name or gebruiker.email }}</h1>
-    <p>Stuur deze link naar {{ gebruiker.email }}. Hij is 72 uur geldig en werkt één keer. Na het sluiten van deze pagina is hij niet meer op te vragen; maak dan een nieuwe.</p>
+<section class="sectie">
+  <h2>Inloglink voor {{ gebruiker.name or gebruiker.email }}</h2>
+  <div class="groep">
+    <div class="rij">
+      <div class="rij__label"><code id="uitnodig-link">{{ link }}</code></div>
+      <div class="rij__acties"><button class="knop" type="button" data-kopieer="uitnodig-link">Kopieer</button></div>
+    </div>
   </div>
-</div>
-<section class="koppel">
-  <div class="url">
-    <code id="uitnodig-link">{{ link }}</code>
-    <button class="knop knop--zacht knop--klein" type="button" data-kopieer="uitnodig-link">Kopiëren</button>
-  </div>
-  <ol class="stappen">
-    <li><span>Via de link kiest {{ (gebruiker.name or gebruiker.email).split()[0] }} een wachtwoord.</span></li>
-    <li><span>Bij de eerste keer inloggen stelt diegene <b>tweestapsverificatie</b> in.</span></li>
-    <li><span>Daarna kan diegene Claude koppelen via het overzicht.</span></li>
-  </ol>
+  <p class="voet">Stuur deze link naar {{ gebruiker.email }}. Hij werkt één keer en is 72 uur geldig. Daarna kiest diegene een wachtwoord en stelt bij de eerste keer inloggen tweestapsverificatie in. Deze link is hierna niet meer op te vragen; maak zo nodig een nieuwe.</p>
 </section>
-<div><a class="knop knop--zacht" href="{{ url_for('beheer.gebruikers') }}">Terug naar gebruikers</a></div>
+<div><a class="knop" href="{{ url_for('beheer.gebruikers') }}">Terug naar gebruikers</a></div>
 {% endblock %}

@@ -1,72 +1,69 @@
 {% extends "base.html" %}
+{% from "_symbolen.html" import symbool %}
 {% block titel %}Gebruikers{% endblock %}
+{% block acties %}
+<button class="knop knop--icoon" type="button" data-open="uitnodig-sheet" title="Gebruiker uitnodigen" aria-label="Gebruiker uitnodigen">{{ symbool('plus') }}</button>
+{% endblock %}
 {% block inhoud %}
-<div class="kop">
-  <div>
-    <h1>Gebruikers</h1>
-    <p>Iedereen hier kan inloggen en Claude koppelen. Beheerders voegen ook databases en gebruikers toe.</p>
-  </div>
-  <button class="knop" type="button" data-open="uitnodig-sheet">Gebruiker uitnodigen</button>
-</div>
-
 <section class="sectie">
   <div class="groep">
     {% for u in gebruikers %}
-    <div class="rij">
-      <div class="avatar" aria-hidden="true">{{ (u.naam.split()|map('first')|join)[:2]|upper }}</div>
-      <div class="rij__tekst">
-        <div class="rij__titel">{{ u.naam }}{% if u.ik %} <span class="muted klein">(jij)</span>{% endif %}</div>
-        <div class="rij__sub">{{ u.email }} · laatst ingelogd: {{ u.laatst }}</div>
+    <div class="rij rij--inspring">
+      <div class="portret" aria-hidden="true">{{ (u.naam.split()|map('first')|join)[:2]|upper }}</div>
+      <div class="rij__label">
+        {{ u.naam }}{% if u.ik %} <span class="sec">(jij)</span>{% endif %}
+        <div class="sub">{{ u.email }} · {{ 'beheerder' if u.rol == 'admin' else 'gebruiker' }} · laatst ingelogd: {{ u.laatst|lower }}</div>
       </div>
-      <div class="rij__rechts">
-        {% if not u.actief %}<span class="pil">Uitgeschakeld</span>
-        {% elif u.uitgenodigd %}<span class="pil pil--waarschuwing">Uitgenodigd</span>
-        {% elif not u.tweestaps %}<span class="pil pil--waarschuwing">Nog geen 2FA</span>
-        {% else %}<span class="pil pil--ok">Actief</span>{% endif %}
-        {% if u.rol == 'admin' %}<span class="pil pil--paars pil--geen-stip">Beheerder</span>{% endif %}
-        {% if not u.ik %}
-        <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='rol') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="knop knop--stil knop--klein" type="submit">{{ 'Maak gebruiker' if u.rol == 'admin' else 'Maak beheerder' }}</button>
-        </form>
-        {% endif %}
-        <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='uitnodiging') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="knop knop--stil knop--klein" type="submit">Nieuwe link</button>
-        </form>
-        {% if u.tweestaps %}
-        <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='tweestaps') }}"
-              data-bevestig="Tweestapsverificatie van {{ u.email }} resetten?">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="knop knop--stil knop--klein" type="submit">2FA resetten</button>
-        </form>
-        {% endif %}
-        {% if not u.ik %}
-          {% if u.actief %}
-          <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='uit') }}"
-                data-bevestig="{{ u.email }} uitschakelen? Alle koppelingen van deze gebruiker worden direct ingetrokken.">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="knop knop--gevaar knop--klein" type="submit">Uitschakelen</button>
-          </form>
-          {% else %}
-          <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='aan') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="knop knop--stil knop--klein" type="submit">Inschakelen</button>
-          </form>
-          {% endif %}
-        {% endif %}
+      <div class="rij__acties">
+        {% if not u.actief %}<span class="status">Uitgeschakeld</span>
+        {% elif u.uitgenodigd %}<span class="status status--let">Uitgenodigd</span>
+        {% elif not u.tweestaps %}<span class="status status--let">Geen 2FA</span>
+        {% else %}<span class="status status--ok">Actief</span>{% endif %}
+        <details class="menu">
+          <summary class="knop knop--icoon" aria-label="Opties voor {{ u.naam }}">{{ symbool('meer') }}</summary>
+          <div class="menu__lijst">
+            <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='uitnodiging') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">Maak nieuwe inloglink…</button>
+            </form>
+            {% if u.tweestaps %}
+            <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='tweestaps') }}"
+                  data-bevestig="Tweestapsverificatie van {{ u.email }} resetten?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">Reset tweestapsverificatie…</button>
+            </form>
+            {% endif %}
+            {% if not u.ik %}
+            <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='rol') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">{{ 'Maak gewone gebruiker' if u.rol == 'admin' else 'Maak beheerder' }}</button>
+            </form>
+            <hr>
+            {% if u.actief %}
+            <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='uit') }}"
+                  data-bevestig="{{ u.email }} uitschakelen? Alle koppelingen van deze gebruiker worden direct ingetrokken.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="rood" type="submit">Schakel uit…</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('beheer.gebruiker_actie', uid=u.id, actie='aan') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">Schakel in</button>
+            </form>
+            {% endif %}
+            {% endif %}
+          </div>
+        </details>
       </div>
     </div>
     {% endfor %}
   </div>
+  <p class="voet">Gebruikers kunnen inloggen en Claude koppelen. Beheerders voegen ook databases en gebruikers toe.</p>
 </section>
 
 <dialog class="sheet" id="uitnodig-sheet" aria-labelledby="uitnodig-titel">
-  <div class="sheet__kop">
-    <h3 id="uitnodig-titel">Gebruiker uitnodigen</h3>
-    <button class="knop knop--stil knop--klein" type="button" data-sluit>Annuleren</button>
-  </div>
   <form class="sheet__inhoud" method="post" action="{{ url_for('beheer.gebruiker_uitnodigen') }}">
+    <h2 id="uitnodig-titel">Gebruiker uitnodigen</h2>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="veld">
       <label for="naam">Naam</label>
@@ -79,13 +76,14 @@
     <div class="veld">
       <label for="rol">Rol</label>
       <select id="rol" name="rol">
-        <option value="gebruiker">Gebruiker — Claude koppelen en gebruiken</option>
-        <option value="admin">Beheerder — ook databases en gebruikers beheren</option>
+        <option value="gebruiker">Gebruiker</option>
+        <option value="admin">Beheerder</option>
       </select>
     </div>
-    <p class="klein muted">Je krijgt een persoonlijke link die 72 uur geldig is. Stuur die zelf door; de server verstuurt geen e-mail.</p>
-    <div class="acties">
-      <button class="knop" type="submit">Uitnodiging maken</button>
+    <p class="sec">Je krijgt een persoonlijke inloglink die 72 uur geldig is. Stuur die zelf door.</p>
+    <div class="knoppen">
+      <button class="knop" type="button" data-sluit>Annuleer</button>
+      <button class="knop knop--primair" type="submit">Nodig uit</button>
     </div>
   </form>
 </dialog>

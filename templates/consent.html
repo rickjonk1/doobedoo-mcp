@@ -2,31 +2,24 @@
 {% block titel %}Koppeling goedkeuren{% endblock %}
 {% block inhoud %}
 <div>
-  <h1>Koppeling goedkeuren</h1>
-  <p class="lede"><strong>{{ client_name }}</strong> wil namens jou werken in de Odoo-databases van doobedoo.</p>
-  <p class="klein muted">Ingelogd als {{ user_name }}</p>
+  <h1>{{ client_name }} toegang geven?</h1>
+  <p class="uitleg">{{ client_name }} wil namens {{ user_name }} werken in de Odoo-databases van doobedoo.</p>
 </div>
 {% if unverified %}
-<div class="melding melding--waarschuwing">
-  Deze app heeft zich zelf aangemeld; de naam is niet door ons gecontroleerd. Keur alleen goed
-  als je de koppeling zojuist zelf hebt gestart vanuit Claude of een andere app die je vertrouwt.
-</div>
+<div class="blok"><div class="melding melding--let">De naam van deze app is niet door ons gecontroleerd. Geef alleen toegang als je de koppeling zojuist zelf hebt gestart.</div></div>
 {% endif %}
-<ul class="toestemming">
+<ul class="rechten groep blok">
   {% for s in scopes %}
-  <li>
-    <span class="vink" aria-hidden="true"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg></span>
-    <span><b>{{ s.title }}</b><small>{{ s.desc }}</small></span>
-  </li>
+  <li><span><b>{{ s.title }}</b><small>{{ s.desc }}</small></span></li>
   {% endfor %}
 </ul>
-<form method="post">
+<form class="blok" method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="oauth_params" value="{{ oauth_params }}">
-  <div class="keuze">
-    <button class="knop knop--zacht" name="decision" value="deny" type="submit">Weigeren</button>
-    <button class="knop" name="decision" value="allow" type="submit">Goedkeuren</button>
+  <div class="naast">
+    <button class="knop knop--groot" name="decision" value="deny" type="submit">Weiger</button>
+    <button class="knop knop--primair knop--groot" name="decision" value="allow" type="submit">Sta toe</button>
   </div>
 </form>
-<p class="klein muted">Je kunt deze koppeling altijd weer intrekken onder Koppelingen.</p>
+<p class="sec">Intrekken kan altijd onder Koppelingen.</p>
 {% endblock %}

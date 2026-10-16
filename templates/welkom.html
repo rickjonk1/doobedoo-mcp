@@ -4,28 +4,22 @@
 {% if verlopen %}
 <div>
   <h1>Deze link werkt niet meer</h1>
-  <p class="lede">De link is al gebruikt of verlopen. Vraag de beheerder om een nieuwe uitnodiging.</p>
+  <p class="uitleg">De link is al gebruikt of verlopen. Vraag een beheerder om een nieuwe.</p>
 </div>
-<a class="knop knop--groot" href="{{ url_for('auth.login') }}">Naar inloggen</a>
+<a class="knop knop--groot knop--breed" href="{{ url_for('auth.login') }}">Naar inloggen</a>
 {% else %}
 <div>
-  <h1>Welkom{% if gebruiker.name and gebruiker.name != gebruiker.email %}, {{ gebruiker.name.split()[0] }}{% endif %}</h1>
-  <p class="lede">Kies een wachtwoord voor {{ gebruiker.email }}. Daarna stel je tweestapsverificatie in.</p>
+  <h1>Kies een wachtwoord</h1>
+  <p class="uitleg">Voor {{ gebruiker.email }}. Daarna stel je tweestapsverificatie in.</p>
 </div>
-{% include "_meldingen.html" %}
+<div class="blok">{% include "_meldingen.html" %}</div>
 <form class="formulier" method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="email" name="email" value="{{ gebruiker.email }}" autocomplete="username" hidden>
-  <div class="veld">
-    <label for="nieuw">Nieuw wachtwoord</label>
-    <input id="nieuw" name="nieuw" type="password" autocomplete="new-password" minlength="12" required autofocus>
-    <span class="hint">Minstens 12 tekens. Een zin van een paar woorden werkt goed.</span>
-  </div>
-  <div class="veld">
-    <label for="herhaal">Herhaal wachtwoord</label>
-    <input id="herhaal" name="herhaal" type="password" autocomplete="new-password" minlength="12" required>
-  </div>
-  <button class="knop knop--groot" type="submit">Wachtwoord instellen</button>
+  <input name="nieuw" type="password" autocomplete="new-password" minlength="12" placeholder="Nieuw wachtwoord" aria-label="Nieuw wachtwoord" required autofocus>
+  <input name="herhaal" type="password" autocomplete="new-password" minlength="12" placeholder="Herhaal wachtwoord" aria-label="Herhaal wachtwoord" required>
+  <p class="sec">Minstens 12 tekens. Een zin van een paar woorden werkt goed.</p>
+  <button class="knop knop--primair knop--groot knop--breed" type="submit">Stel wachtwoord in</button>
 </form>
 {% endif %}
 {% endblock %}

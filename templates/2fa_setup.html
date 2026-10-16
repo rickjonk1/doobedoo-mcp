@@ -3,19 +3,15 @@
 {% block inhoud %}
 <div>
   <h1>Stel tweestapsverificatie in</h1>
-  <p class="lede">Scan de code met een authenticator-app, zoals Wachtwoorden op iPhone of Mac,
-    Google Authenticator of 1Password. Daarna vraagt deze site bij elke login om een code.</p>
+  <p class="uitleg">Scan de code met Wachtwoorden op je iPhone of Mac, of met een andere authenticator-app. Voer daarna de code in die de app toont.</p>
 </div>
-{% if error %}<div class="melding melding--fout" role="alert">{{ error }}</div>{% endif %}
+<div class="blok">{% if error %}<div class="melding melding--fout" role="alert">{{ error }}</div>{% endif %}</div>
 <div class="qr"><img src="data:image/png;base64,{{ qr_b64 }}" alt="QR-code voor je authenticator-app"></div>
-<p class="geheim" aria-label="Sleutel om handmatig in te voeren">{{ secret }}</p>
+<p class="geheim">Handmatig: {{ secret }}</p>
 <form class="formulier" method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <div class="veld">
-    <label for="code">Code uit de app</label>
-    <input id="code" name="code" type="text" class="code-invoer" inputmode="numeric"
-           autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" data-code required autofocus>
-  </div>
-  <button class="knop knop--groot" type="submit">Bevestigen</button>
+  <input name="code" type="text" class="code" inputmode="numeric" autocomplete="one-time-code"
+         pattern="[0-9]{6}" maxlength="6" data-code aria-label="Code uit de app" required autofocus>
+  <button class="knop knop--primair knop--groot knop--breed" type="submit">Bevestig</button>
 </form>
 {% endblock %}

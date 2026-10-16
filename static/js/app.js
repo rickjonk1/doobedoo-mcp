@@ -27,6 +27,18 @@
     knop.addEventListener("click", () => knop.closest("dialog")?.close());
   });
 
+  // Schakelaars versturen hun formulier direct
+  document.querySelectorAll("form[data-schakel] .schakel").forEach((s) => {
+    s.addEventListener("change", () => s.form.submit());
+  });
+
+  // Pull-down-menu's: sluiten bij klik ernaast of Escape
+  const sluitMenus = (behalve) => document.querySelectorAll("details.menu[open]").forEach((d) => {
+    if (d !== behalve) d.removeAttribute("open");
+  });
+  document.addEventListener("click", (e) => sluitMenus(e.target.closest("details.menu")));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") sluitMenus(null); });
+
   // Bevestigen bij onomkeerbare acties
   document.querySelectorAll("form[data-bevestig]").forEach((form) => {
     form.addEventListener("submit", (e) => {
@@ -52,7 +64,7 @@
 
     testKnop.addEventListener("click", async () => {
       testKnop.disabled = true;
-      testKnop.textContent = "Bezig met testen…";
+      testKnop.textContent = "Bezig…";
       melding.className = "melding verborgen";
       try {
         const data = Object.fromEntries(new FormData(dbForm));
@@ -88,7 +100,7 @@
         melding.className = "melding melding--fout";
       } finally {
         testKnop.disabled = false;
-        testKnop.textContent = "Verbinding testen";
+        testKnop.textContent = "Test verbinding";
       }
     });
   }

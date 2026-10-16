@@ -2,19 +2,14 @@
 <html lang="nl">
 <head>
 {% include "_kop.html" %}
-<title>{% block titel %}{% endblock %} · doobedoo MCP</title>
+<title>{% block titel %}{% endblock %} – doobedoo MCP</title>
 </head>
 <body>
-<main class="auth">
-  <div class="auth__kolom">
-    <div class="auth__logo">
-      <img class="logo--licht" src="{{ url_for('static', filename='img/doobedoo_horizontaal_kleur.svg') }}" alt="doobedoo">
-      <img class="logo--donker" src="{{ url_for('static', filename='img/doobedoo_horizontaal_kleur_wit.svg') }}" alt="doobedoo">
-    </div>
-    <div class="auth__kaart">
-      {% block inhoud %}{% endblock %}
-    </div>
-    <p class="auth__voet">Slimmer ondernemen met Odoo.</p>
+<main class="aanmelden">
+  <div class="aanmelden__kolom">
+    <div class="aanmelden__icoon"><img src="{{ url_for('static', filename='img/doobedoo_icoon_kleur.svg') }}" alt="doobedoo"></div>
+    {% block inhoud %}{% endblock %}
+    <p class="aanmelden__voet">doobedoo MCP</p>
   </div>
 </main>
 </body>

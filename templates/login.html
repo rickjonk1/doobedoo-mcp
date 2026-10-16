@@ -2,21 +2,15 @@
 {% block titel %}Inloggen{% endblock %}
 {% block inhoud %}
 <div>
-  <h1>Inloggen</h1>
-  <p class="lede">Beheer de Odoo-koppelingen van doobedoo.</p>
+  <h1>Log in bij doobedoo</h1>
+  <p class="uitleg">Beheer de Odoo-koppelingen voor Claude.</p>
 </div>
-{% include "_meldingen.html" %}
+<div class="blok">{% include "_meldingen.html" %}</div>
 <form class="formulier" method="post" action="{{ url_for('auth.login') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="next" value="{{ next or '' }}">
-  <div class="veld">
-    <label for="email">E-mailadres</label>
-    <input id="email" name="email" type="email" autocomplete="username" required autofocus>
-  </div>
-  <div class="veld">
-    <label for="password">Wachtwoord</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" required>
-  </div>
-  <button class="knop knop--groot" type="submit">Doorgaan</button>
+  <input name="email" type="email" autocomplete="username" placeholder="E-mailadres" aria-label="E-mailadres" required autofocus>
+  <input name="password" type="password" autocomplete="current-password" placeholder="Wachtwoord" aria-label="Wachtwoord" required>
+  <button class="knop knop--primair knop--groot knop--breed" type="submit">Ga door</button>
 </form>
 {% endblock %}
