@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640" role="img" aria-labelledby="title desc">
+<title id="title">doobedoo - icoon - kleur</title>
+<desc id="desc">Vectorreconstructie op basis van het aangeleverde doobedoo-beeldmerk. Transparante achtergrond. Alle letters zijn vectorcontouren. Slogan: Slimmer ondernemen met Odoo.</desc>
+<defs>
+ <linearGradient id="violet" gradientUnits="userSpaceOnUse" x1="47" y1="187" x2="340" y2="484">
+  <stop offset="0" stop-color="#A04AFF"/><stop offset="0.42" stop-color="#8331F5"/><stop offset="0.77" stop-color="#611CDA"/><stop offset="1" stop-color="#390C88"/>
+ </linearGradient>
+ <linearGradient id="stem" gradientUnits="userSpaceOnUse" x1="303" y1="30" x2="247" y2="502">
+  <stop offset="0" stop-color="#9233FC"/><stop offset="0.35" stop-color="#651CD0"/><stop offset="0.73" stop-color="#3B0D8B"/><stop offset="1" stop-color="#26085E"/>
+ </linearGradient>
+ <linearGradient id="coral" gradientUnits="userSpaceOnUse" x1="319" y1="504" x2="532" y2="183">
+  <stop offset="0" stop-color="#FF6088"/><stop offset="0.50" stop-color="#FF918C"/><stop offset="1" stop-color="#FFAF91"/>
+ </linearGradient>
+</defs>
+<g transform="translate(67.1000 107.6000) scale(0.90000000)"><g transform="translate(-24 -30)">
+    <path fill="url(#coral)" fill-rule="evenodd" d="M 254 336 a 166 166 0 1 0 332 0 a 166 166 0 1 0 -332 0 Z M 359 336 a 61 61 0 1 0 122 0 a 61 61 0 1 0 -122 0 Z"/>
+    <path fill="url(#violet)" fill-rule="evenodd" d="M 24 336 a 166 166 0 1 0 332 0 a 166 166 0 1 0 -332 0 Z M 129 336 a 61 61 0 1 0 122 0 a 61 61 0 1 0 -122 0 Z"/>
+    <path fill="url(#stem)" d="M 251 65 L 356 30 L 356 336 C 356 427.679 281.679 502 190 502 C 233 491 251 416 251 336 Z"/>
+    </g></g>
+</svg>

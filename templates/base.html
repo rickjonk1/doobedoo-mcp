@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="nl">
+<head>
+{% include "_kop.html" %}
+<title>{% block titel %}{% endblock %} · doobedoo MCP</title>
+</head>
+<body>
+{% set ep = request.endpoint %}
+<header class="balk">
+  <div class="balk__binnen">
+    <a class="balk__logo" href="{{ url_for('beheer.overzicht') }}" aria-label="doobedoo MCP, naar het overzicht">
+      <img class="logo--licht" src="{{ url_for('static', filename='img/doobedoo_horizontaal_kleur.svg') }}" alt="doobedoo">
+      <img class="logo--donker" src="{{ url_for('static', filename='img/doobedoo_horizontaal_kleur_wit.svg') }}" alt="doobedoo">
+    </a>
+    <nav class="nav" aria-label="Hoofdmenu">
+      <a href="{{ url_for('beheer.overzicht') }}" {% if ep == 'beheer.overzicht' %}aria-current="page"{% endif %}>Overzicht</a>
+      <a href="{{ url_for('beheer.databases') }}" {% if ep == 'beheer.databases' %}aria-current="page"{% endif %}>Databases</a>
+      <a href="{{ url_for('beheer.koppelingen') }}" {% if ep == 'beheer.koppelingen' %}aria-current="page"{% endif %}>Koppelingen</a>
+      {% if current_user.is_admin() %}
+      <a href="{{ url_for('beheer.gebruikers') }}" {% if ep in ('beheer.gebruikers', 'beheer.gebruiker_uitnodigen', 'beheer.gebruiker_actie') %}aria-current="page"{% endif %}>Gebruikers</a>
+      <a href="{{ url_for('beheer.logboek') }}" {% if ep == 'beheer.logboek' %}aria-current="page"{% endif %}>Logboek</a>
+      {% endif %}
+    </nav>
+    <div class="balk__ik">
+      <a href="{{ url_for('beheer.account') }}" class="avatar" title="Account van {{ current_user.name or current_user.email }}" aria-label="Je account">
+        {{- ((current_user.name or current_user.email).split()|map('first')|join)[:2]|upper -}}
+      </a>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="knop knop--stil knop--klein" type="submit">Uitloggen</button>
+      </form>
+    </div>
+  </div>
+</header>
+<main class="pagina">
+  {% include "_meldingen.html" %}
+  {% block inhoud %}{% endblock %}
+</main>
+</body>
+</html>

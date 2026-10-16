@@ -1,0 +1,9 @@
+{% with berichten = get_flashed_messages(with_categories=true) %}
+{% if berichten %}
+<div class="meldingen" role="status">
+  {% for cat, tekst in berichten %}
+  <div class="melding {% if cat in ('fout', 'error') %}melding--fout{% elif cat == 'ok' %}melding--ok{% endif %}">{{ tekst }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

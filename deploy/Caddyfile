@@ -1,0 +1,15 @@
+{
+	email {$BEHEER_EMAIL}
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+{$DOMEIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy app:8000
+}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block titel %}Databases{% endblock %}
+{% block inhoud %}
+<div class="kop">
+  <div>
+    <h1>Databases</h1>
+    <p>De Odoo-omgevingen waar Claude in mag werken. De API-sleutel wordt versleuteld opgeslagen en is na het opslaan door niemand meer in te zien.</p>
+  </div>
+  {% if current_user.is_admin() %}
+  <button class="knop" type="button" data-open="db-sheet">Database toevoegen</button>
+  {% endif %}
+</div>
+
+<section class="sectie">
+  <div class="groep">
+    {% for d in databases %}
+    <div class="rij">
+      <div class="rij__icoon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></div>
+      <div class="rij__tekst">
+        <div class="rij__titel">{{ d.db_name }}</div>
+        <div class="rij__sub">{{ d.url }} · {{ d.gebruiker }}</div>
+        <div class="rij__sub">{{ d.bedrijven|map(attribute='naam')|join(', ') }}</div>
+      </div>
+      <div class="rij__rechts">
+        {% if d.actief %}<span class="pil pil--ok">Actief</span>{% else %}<span class="pil">Uit</span>{% endif %}
+        {% if current_user.is_admin() %}
+        <form method="post" action="{{ url_for('beheer.database_actief', db_name=d.db_name) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="aan" value="{{ '0' if d.actief else '1' }}">
+          <button class="knop knop--stil knop--klein" type="submit">{{ 'Uitzetten' if d.actief else 'Aanzetten' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('beheer.database_verwijderen', db_name=d.db_name) }}"
+              data-bevestig="{{ d.db_name }} verwijderen? Claude kan er dan niet meer bij en de API-sleutel wordt gewist.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="knop knop--gevaar knop--klein" type="submit">Verwijderen</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="leeg">
+      <strong>Nog geen databases</strong>
+      <span>Voeg een Odoo-database toe met een API-sleutel van een gebruiker met de juiste rechten.</span>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="voet">Claude krijgt dezelfde rechten als de Odoo-gebruiker van de API-sleutel. Gebruik bij voorkeur een aparte gebruiker met alleen de rechten die nodig zijn.</p>
+</section>
+
+{% if current_user.is_admin() %}
+<dialog class="sheet" id="db-sheet" aria-labelledby="db-sheet-titel">
+  <div class="sheet__kop">
+    <h3 id="db-sheet-titel">Database toevoegen</h3>
+    <button class="knop knop--stil knop--klein" type="button" data-sluit>Annuleren</button>
+  </div>
+  <form class="sheet__inhoud" id="db-formulier" method="post" action="{{ url_for('beheer.database_opslaan') }}"
+        data-test="{{ url_for('beheer.database_testen') }}" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="veld">
+      <label for="url">Adres van Odoo</label>
+      <input id="url" name="url" type="url" placeholder="https://bedrijf.odoo.com" required>
+    </div>
+    <div class="veld">
+      <label for="database">Databasenaam</label>
+      <input id="database" name="database" type="text" placeholder="bedrijf-main-1234567" required>
+      <span class="hint">Te vinden in Odoo onder Instellingen › Over, of in de URL van Odoo.sh.</span>
+    </div>
+    <div class="twee">
+      <div class="veld">
+        <label for="gebruiker">Gebruiker</label>
+        <input id="gebruiker" name="gebruiker" type="text" placeholder="koppeling@bedrijf.nl" required>
+      </div>
+      <div class="veld">
+        <label for="sleutel">API-sleutel</label>
+        <input id="sleutel" name="sleutel" type="password" autocomplete="new-password" required>
+      </div>
+    </div>
+    <div id="db-melding" class="melding verborgen" role="status"></div>
+    <div class="veld verborgen" id="db-bedrijven-blok">
+      <label>Bedrijven die Claude mag zien</label>
+      <div class="vinkjes" id="db-bedrijven"></div>
+    </div>
+    <div class="acties">
+      <button class="knop knop--zacht" type="button" id="db-testen">Verbinding testen</button>
+      <button class="knop" type="submit" id="db-opslaan" disabled>Opslaan</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}

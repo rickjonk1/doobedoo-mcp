@@ -1,0 +1,20 @@
+{% extends "auth_base.html" %}
+{% block titel %}Tweestapsverificatie{% endblock %}
+{% block inhoud %}
+<div>
+  <h1>Bevestig dat jij het bent</h1>
+  <p class="lede">Vul de 6-cijferige code uit je authenticator-app in.</p>
+</div>
+{% include "_meldingen.html" %}
+{% if error %}<div class="melding melding--fout" role="alert">{{ error }}</div>{% endif %}
+<form class="formulier" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="veld">
+    <label for="code">Code</label>
+    <input id="code" name="code" type="text" class="code-invoer" inputmode="numeric"
+           autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" data-code required autofocus>
+  </div>
+  <button class="knop knop--groot" type="submit">Inloggen</button>
+</form>
+<p class="klein muted"><a href="{{ url_for('auth.login') }}">Terug naar inloggen</a></p>
+{% endblock %}

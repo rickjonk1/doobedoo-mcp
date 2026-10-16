@@ -1,0 +1,214 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  doobedoo MCP - een kleine, versleutelde EC2-server (t4g.micro) achter Caddy.
+  Geen SSH: beheer via Session Manager. Geheimen in Parameter Store (KMS).
+
+Parameters:
+  Domein:
+    Type: String
+    Default: mcp.doobedoo.nl
+  BeheerEmail:
+    Type: String
+    Default: info@doobedoo.nl
+    Description: Eerste beheerder en adres voor Let's Encrypt.
+  InstanceType:
+    Type: String
+    Default: t4g.micro
+    AllowedValues: [t4g.nano, t4g.micro, t4g.small]
+  AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+
+Resources:
+  # ── Netwerk: eigen VPC met één publiek subnet (geen NAT-kosten) ─────────────
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.42.0.0/24
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: [{Key: Name, Value: doobedoo-mcp}]
+  Igw:
+    Type: AWS::EC2::InternetGateway
+  IgwKoppeling:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: {VpcId: !Ref Vpc, InternetGatewayId: !Ref Igw}
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.42.0.0/26
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{Key: Name, Value: doobedoo-mcp-publiek}]
+  Routes:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref Vpc}
+  StandaardRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IgwKoppeling
+    Properties: {RouteTableId: !Ref Routes, DestinationCidrBlock: 0.0.0.0/0, GatewayId: !Ref Igw}
+  SubnetRoutes:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref Subnet, RouteTableId: !Ref Routes}
+
+  # Alleen 80 (doorsturen naar https + Let's Encrypt) en 443. Geen 22.
+  Firewall:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: doobedoo MCP - alleen HTTP en HTTPS
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+        - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+        - {IpProtocol: udp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+      SecurityGroupEgress:
+        - {IpProtocol: -1, CidrIp: 0.0.0.0/0}
+
+  # ── Container-register ──────────────────────────────────────────────────────
+  Register:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: doobedoo-mcp
+      ImageTagMutability: MUTABLE
+      ImageScanningConfiguration: {ScanOnPush: true}
+      EncryptionConfiguration: {EncryptionType: AES256}
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {"rules":[{"rulePriority":1,"description":"Bewaar de laatste 10 images",
+            "selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},
+            "action":{"type":"expire"}}]}
+
+  # ── Rechten van de server ───────────────────────────────────────────────────
+  ServerRol:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: doobedoo-mcp-server
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: ec2.amazonaws.com}, Action: sts:AssumeRole}
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: doobedoo-mcp
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: ImagesOphalen
+                Effect: Allow
+                Action: [ecr:BatchGetImage, ecr:GetDownloadUrlForLayer, ecr:BatchCheckLayerAvailability]
+                Resource: !GetAtt Register.Arn
+              - Sid: EcrInloggen
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: Geheimen
+                Effect: Allow
+                Action: [ssm:GetParameter, ssm:PutParameter]
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/doobedoo/*
+              - Sid: DocumentherkenningClaude
+                Effect: Allow
+                Action: [bedrock:InvokeModel]
+                Resource:
+                  - arn:aws:bedrock:*::foundation-model/anthropic.*
+                  - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/eu.anthropic.*
+              - Sid: Tekstherkenning
+                Effect: Allow
+                Action: [textract:DetectDocumentText, textract:AnalyzeDocument]
+                Resource: '*'
+  ServerProfiel:
+    Type: AWS::IAM::InstanceProfile
+    Properties: {Roles: [!Ref ServerRol]}
+
+  # ── De server ───────────────────────────────────────────────────────────────
+  Server:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref ServerProfiel
+      SubnetId: !Ref Subnet
+      SecurityGroupIds: [!Ref Firewall]
+      PropagateTagsToVolumeOnCreation: true
+      MetadataOptions:
+        HttpTokens: required            # alleen IMDSv2
+        HttpPutResponseHopLimit: 2      # nodig voor containers
+        HttpEndpoint: enabled
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: {VolumeSize: 16, VolumeType: gp3, Encrypted: true, DeleteOnTermination: false}
+      Tags:
+        - {Key: Name, Value: doobedoo-mcp}
+        - {Key: Backup, Value: doobedoo-mcp}
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            set -euxo pipefail
+            dnf -y update --security
+            dnf -y install docker dnf-automatic
+            systemctl enable --now docker
+
+            # Automatische beveiligingsupdates
+            sed -i 's/^upgrade_type.*/upgrade_type = security/; s/^apply_updates.*/apply_updates = yes/' /etc/dnf/automatic.conf
+            systemctl enable --now dnf-automatic.timer
+
+            # 1 GB swap als buffer
+            if [ ! -f /swapfile ]; then
+              dd if=/dev/zero of=/swapfile bs=1M count=1024 && chmod 600 /swapfile
+              mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab
+            fi
+
+            install -d -m 750 -o 10001 -g 10001 /srv/doobedoo/data
+            install -d -m 700 /srv/doobedoo/caddy /etc/doobedoo
+
+            cat > /etc/doobedoo/instellingen <<CONF
+            REGISTER=${RegisterUri}
+            DOMEIN=${Domein}
+            BEHEER_EMAIL=${BeheerEmail}
+            REGIO=${AWS::Region}
+            CONF
+
+            # De rest (Caddyfile, deployscript) komt bij elke deploy uit de repo, via SSM.
+          - RegisterUri: !GetAtt Register.RepositoryUri
+
+  VastAdres:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Server
+      Tags: [{Key: Name, Value: doobedoo-mcp}]
+
+  # ── Dagelijkse, versleutelde snapshots (14 dagen bewaard) ───────────────────
+  BackupRol:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: dlm.amazonaws.com}, Action: sts:AssumeRole}
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSDataLifecycleManagerServiceRole
+  Backups:
+    Type: AWS::DLM::LifecyclePolicy
+    Properties:
+      Description: doobedoo MCP dagelijkse snapshot
+      State: ENABLED
+      ExecutionRoleArn: !GetAtt BackupRol.Arn
+      PolicyDetails:
+        ResourceTypes: [INSTANCE]
+        TargetTags: [{Key: Backup, Value: doobedoo-mcp}]
+        Schedules:
+          - Name: dagelijks
+            CopyTags: true
+            CreateRule: {Interval: 24, IntervalUnit: HOURS, Times: ['02:00']}
+            RetainRule: {Count: 14}
+
+Outputs:
+  Register:
+    Value: !GetAtt Register.RepositoryUri
+  ServerId:
+    Value: !Ref Server
+  VastIp:
+    Description: Zet een A-record mcp.doobedoo.nl naar dit adres.
+    Value: !Ref VastAdres

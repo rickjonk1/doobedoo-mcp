@@ -1,0 +1,125 @@
+name: Testen en uitrollen
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE: arn:aws:iam::186090231658:role/doobedoo-github-deploy
+  STACK: doobedoo-mcp
+
+jobs:
+  testen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt pytest
+      - run: python -m pytest -q -p no:warnings tests
+
+  uitrollen:
+    needs: testen
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write          # OIDC: geen AWS-sleutels in GitHub
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Infrastructuur bijwerken
+        run: |
+          aws cloudformation deploy --stack-name "$STACK" \
+            --template-file infra/stack.yml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset \
+            --tags Bedrijf=doobedoo Project=mcp
+          aws cloudformation describe-stacks --stack-name "$STACK" \
+            --query 'Stacks[0].Outputs' --output table
+
+      - name: Uitvoer van de stack
+        id: stack
+        run: |
+          uit() { aws cloudformation describe-stacks --stack-name "$STACK" \
+                    --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          echo "register=$(uit Register)" >> "$GITHUB_OUTPUT"
+          echo "server=$(uit ServerId)" >> "$GITHUB_OUTPUT"
+          echo "ip=$(uit VastIp)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v3
+        with: {platforms: arm64}
+      - uses: docker/setup-buildx-action@v3
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Image bouwen (arm64) en pushen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          provenance: false
+          tags: |
+            ${{ steps.stack.outputs.register }}:${{ github.sha }}
+            ${{ steps.stack.outputs.register }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Wachten tot de server bereikbaar is via SSM
+        run: |
+          for i in $(seq 1 60); do
+            status=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=${{ steps.stack.outputs.server }}" \
+              --query 'InstanceInformationList[0].PingStatus' --output text 2>/dev/null || true)
+            [ "$status" = "Online" ] && exit 0
+            sleep 10
+          done
+          echo "Server meldt zich niet bij SSM." && exit 1
+
+      - name: Uitrollen op de server
+        run: |
+          script=$(base64 -w0 deploy/doobedoo-deploy.sh)
+          caddy=$(base64 -w0 deploy/Caddyfile)
+          # Eerste opstart: wacht tot de installatie (UserData) klaar is.
+          cmds=$(jq -nc --arg s "$script" --arg c "$caddy" --arg t "${{ github.sha }}" '[
+            "cloud-init status --wait >/dev/null 2>&1 || true",
+            "echo \($s) | base64 -d > /usr/local/bin/doobedoo-deploy && chmod 750 /usr/local/bin/doobedoo-deploy",
+            "echo \($c) | base64 -d > /etc/doobedoo/Caddyfile",
+            "/usr/local/bin/doobedoo-deploy \($t)"
+          ]')
+          id=$(aws ssm send-command --instance-ids "${{ steps.stack.outputs.server }}" \
+                 --document-name AWS-RunShellScript --comment "deploy ${{ github.sha }}" \
+                 --parameters "{\"commands\":$cmds,\"executionTimeout\":[\"900\"]}" \
+                 --query Command.CommandId --output text)
+          for i in $(seq 1 90); do
+            st=$(aws ssm get-command-invocation --command-id "$id" \
+                   --instance-id "${{ steps.stack.outputs.server }}" --query Status --output text 2>/dev/null || echo Pending)
+            case "$st" in Success|Failed|Cancelled|TimedOut) break;; esac
+            sleep 10
+          done
+          aws ssm get-command-invocation --command-id "$id" --instance-id "${{ steps.stack.outputs.server }}" \
+            --query '[Status,StandardOutputContent,StandardErrorContent]' --output text
+          [ "$st" = "Success" ]
+
+      - name: Samenvatting
+        run: |
+          {
+            echo "### doobedoo MCP uitgerold"
+            echo "- Versie: \`${{ github.sha }}\`"
+            echo "- Vast IP: \`${{ steps.stack.outputs.ip }}\` (A-record voor mcp.doobedoo.nl)"
+          } >> "$GITHUB_STEP_SUMMARY"

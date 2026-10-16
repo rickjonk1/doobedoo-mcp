@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.secret_key
+*.db
+*.db-wal
+*.db-shm
+instance/
+.pytest_cache/
+.venv/

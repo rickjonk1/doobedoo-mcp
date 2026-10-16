@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titel %}Uitnodiging{% endblock %}
+{% block inhoud %}
+<div class="kop">
+  <div>
+    <h1>Uitnodiging voor {{ gebruiker.name or gebruiker.email }}</h1>
+    <p>Stuur deze link naar {{ gebruiker.email }}. Hij is 72 uur geldig en werkt één keer. Na het sluiten van deze pagina is hij niet meer op te vragen; maak dan een nieuwe.</p>
+  </div>
+</div>
+<section class="koppel">
+  <div class="url">
+    <code id="uitnodig-link">{{ link }}</code>
+    <button class="knop knop--zacht knop--klein" type="button" data-kopieer="uitnodig-link">Kopiëren</button>
+  </div>
+  <ol class="stappen">
+    <li><span>Via de link kiest {{ (gebruiker.name or gebruiker.email).split()[0] }} een wachtwoord.</span></li>
+    <li><span>Bij de eerste keer inloggen stelt diegene <b>tweestapsverificatie</b> in.</span></li>
+    <li><span>Daarna kan diegene Claude koppelen via het overzicht.</span></li>
+  </ol>
+</section>
+<div><a class="knop knop--zacht" href="{{ url_for('beheer.gebruikers') }}">Terug naar gebruikers</a></div>
+{% endblock %}

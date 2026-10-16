@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titel %}Logboek{% endblock %}
+{% block inhoud %}
+<div class="kop">
+  <div>
+    <h1>Logboek</h1>
+    <p>De laatste 200 aanroepen van de MCP-server: wie, welke app en welke tool. Geweigerde aanroepen staan er ook in.</p>
+  </div>
+</div>
+<section class="groep tabel-wrap">
+  <table>
+    <thead><tr><th>Tijd</th><th>Wie</th><th>App</th><th>Wat</th><th>Status</th><th>Duur</th></tr></thead>
+    <tbody>
+    {% for r in regels %}
+      <tr>
+        <td class="mono">{{ r.tijd }}</td>
+        <td>{{ r.wie }}</td>
+        <td>{{ r.app }}</td>
+        <td class="mono">{{ r.wat }}</td>
+        <td>{% if r.status == 200 %}<span class="pil pil--ok">{{ r.status }}</span>{% else %}<span class="pil pil--fout">{{ r.status }}</span>{% endif %}</td>
+        <td class="mono">{{ r.ms }} ms</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">Nog geen aanroepen.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

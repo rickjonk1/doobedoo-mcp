@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titel %}Koppelingen{% endblock %}
+{% block inhoud %}
+<div class="kop">
+  <div>
+    <h1>Koppelingen</h1>
+    <p>Apps die namens {{ 'gebruikers' if current_user.is_admin() else 'jou' }} toegang hebben tot Odoo. Intrekken werkt direct: de app moet daarna opnieuw toestemming vragen.</p>
+  </div>
+</div>
+
+<section class="sectie">
+  <div class="groep">
+    {% for k in koppelingen %}
+    <div class="rij">
+      <div class="rij__icoon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></div>
+      <div class="rij__tekst">
+        <div class="rij__titel">{{ k.app }}</div>
+        <div class="rij__sub">{% if current_user.is_admin() %}{{ k.gebruiker }} · {% endif %}sinds {{ k.sinds }} · laatst gebruikt: {{ k.laatst }}</div>
+      </div>
+      <div class="rij__rechts">
+        {% if k.schrijven %}<span class="pil pil--paars">Lezen en wijzigen</span>{% else %}<span class="pil">Alleen lezen</span>{% endif %}
+        <form method="post" action="{{ url_for('beheer.koppeling_intrekken') }}"
+              data-bevestig="De koppeling met {{ k.app }} intrekken?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="client_id" value="{{ k.client_id }}">
+          <input type="hidden" name="gebruiker_id" value="{{ k.gebruiker_id or '' }}">
+          <button class="knop knop--gevaar knop--klein" type="submit">Intrekken</button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="leeg">
+      <strong>Geen actieve koppelingen</strong>
+      <span>Koppel Claude via het adres op het overzicht.</span>
+      <a class="knop knop--zacht" href="{{ url_for('beheer.overzicht') }}">Naar het overzicht</a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

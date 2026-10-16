@@ -1,0 +1,12 @@
+.git
+.github
+__pycache__
+*.pyc
+.env
+.secret_key
+*.db
+*.db-*
+.pytest_cache
+tests
+infra
+deploy
