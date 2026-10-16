@@ -425,6 +425,13 @@ def logboek():
 @login_required
 @limiter.limit("10 per minute", methods=["POST"])
 def account():
+    if request.method == "POST" and request.form.get("actie") == "naam":
+        naam = (request.form.get("naam") or "").strip()[:150]
+        if naam:
+            current_user.name = naam
+            db.session.commit()
+            flash("Je naam is bewaard.", "ok")
+        return redirect(url_for("beheer.account"))
     if request.method == "POST":
         huidig = request.form.get("huidig") or ""
         nieuw = request.form.get("nieuw") or ""

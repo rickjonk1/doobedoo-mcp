@@ -3,12 +3,24 @@
 {% block inhoud %}
 <section class="sectie">
   <div class="groep">
-    <div class="rij"><div class="rij__label">Naam</div><div class="rij__waarde">{{ current_user.name }}</div></div>
     <div class="rij"><div class="rij__label">E-mailadres</div><div class="rij__waarde">{{ current_user.email }}</div></div>
     <div class="rij"><div class="rij__label">Rol</div><div class="rij__waarde">{{ 'Beheerder' if current_user.is_admin() else 'Gebruiker' }}</div></div>
     <div class="rij"><div class="rij__label">Tweestapsverificatie</div><div class="rij__waarde"><span class="status status--ok">Aan</span></div></div>
   </div>
   <p class="voet">Nieuwe telefoon? Vraag een beheerder je tweestapsverificatie te resetten.</p>
+</section>
+
+<section class="sectie">
+  <h2>Naam</h2>
+  <form class="groep sheet__inhoud" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="actie" value="naam">
+    <div class="veld">
+      <label for="naam">Zo zien anderen je in de app en in het logboek</label>
+      <input id="naam" name="naam" type="text" value="{{ current_user.name or '' }}" autocomplete="name" maxlength="150" required>
+    </div>
+    <div class="knoppen"><button class="knop knop--primair" type="submit">Bewaar naam</button></div>
+  </form>
 </section>
 
 <section class="sectie">
