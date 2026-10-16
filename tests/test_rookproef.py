@@ -158,3 +158,17 @@ def test_oauth_pkce_en_mcp(app):
     c.post("/koppelingen/intrekken", data={"csrf_token": _csrf(r.text), "client_id": cid,
                                            "gebruiker_id": gid})
     assert m.post("/mcp", headers=h, json={"jsonrpc": "2.0", "id": 5, "method": "ping"}).status_code == 401
+
+
+def test_formulier_over_https_met_referer(app):
+    """Over https eist Flask-WTF een Referer van dezelfde site; de
+    Referrer-Policy mag die dus niet wegfilteren."""
+    _maak_gebruiker(app)
+    c = app.test_client()
+    r = c.get("/login", base_url="https://mcp.doobedoo.nl")
+    assert r.headers["Referrer-Policy"] == "same-origin"
+    r = c.post("/login", base_url="https://mcp.doobedoo.nl",
+               headers={"Referer": "https://mcp.doobedoo.nl/login"},
+               data={"csrf_token": _csrf(r.text), "email": "rick@doobedoo.nl",
+                     "password": "een-lang-wachtwoord"})
+    assert r.status_code == 302

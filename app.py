@@ -98,7 +98,7 @@ def maak_app(test_config: dict | None = None) -> Flask:
                      "base-uri 'none'; object-src 'none'")
         h.setdefault("X-Content-Type-Options", "nosniff")
         h.setdefault("X-Frame-Options", "DENY")
-        h.setdefault("Referrer-Policy", "no-referrer")
+        h.setdefault("Referrer-Policy", "same-origin")   # nodig voor de CSRF-check over https
         h.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         h.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         if IS_PRODUCTION:
