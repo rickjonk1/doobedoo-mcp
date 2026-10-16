@@ -46,7 +46,7 @@ docker run -d --name app --network doobedoo --restart unless-stopped \
 # Caddy (TLS) alleen herstarten als de Caddyfile veranderd is.
 nieuw=$(sha256sum /etc/doobedoo/Caddyfile | cut -d' ' -f1)
 oud=$(cat /etc/doobedoo/Caddyfile.sha 2>/dev/null || true)
-if [ "$nieuw" != "$oud" ] || ! docker ps --format '{{.Names}}' | grep -qx caddy; then
+if [ "$nieuw" != "$oud" ] || [ "${CADDY_HERSTART:-0}" = "1" ] || ! docker ps --format '{{.Names}}' | grep -qx caddy; then
   docker rm -f caddy >/dev/null 2>&1 || true
   docker run -d --name caddy --network doobedoo --restart unless-stopped \
     -p 80:80 -p 443:443 -p 443:443/udp \
@@ -62,6 +62,11 @@ fi
 for _ in $(seq 1 30); do
   if docker exec app python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/gezond',timeout=2)" 2>/dev/null; then
     echo "App draait (versie $TAG)."
+    sleep 25
+    echo "--- Caddy (TLS), laatste regels ---"
+    docker logs --tail 25 caddy 2>&1 | cut -c1-300 || true
+    echo "--- Van buitenaf via https://$DOMEIN ---"
+    curl -sS -m 10 -o /dev/null -w "HTTP %{http_code}\n" "https://$DOMEIN/gezond" || true
     docker image prune -af --filter "until=168h" >/dev/null 2>&1 || true
     exit 0
   fi
